@@ -1,1 +1,3 @@
 FR-02 Alur pengerjann tugas proyek RPL diselasaikan.
+
+FR-03 Nazwa dan Erma dapat mengakses dan mengelola data proyek RPL.
