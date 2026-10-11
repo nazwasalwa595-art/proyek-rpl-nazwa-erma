@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Presensi IoT - MTsN 2 Tarakan</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS & jsPDF -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- File CSS Eksternal -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- ========================================== -->
+    <!-- 1. HALAMAN AUTENTIKASI (LOGIN & REGISTRASI) -->
+    <!-- ========================================== -->
+    <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 px-4">
+        <div class="max-w-md w-full bg-white border border-slate-200 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+            
+            <!-- Logo Header Branding -->
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 bg-emerald-600 text-white font-extrabold text-2xl rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-fingerprint"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900 tracking-wide">MTsN 2 TARAKAN</h2>
+                <p class="text-xs text-slate-500 mt-1">Sistem Presensi IoT & Administrasi Wali Kelas</p>
+            </div>
+
+            <!-- FORM LOGIN WALI KELAS -->
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="border-b border-slate-100 pb-2 mb-4 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-800">Masuk Akun Wali Kelas</h3>
+                    <span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Login Portal</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">NIP Guru</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="login-nip" required placeholder="Masukkan NIP Guru" value="198503152010121002" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Kata Sandi (Password)</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        <input type="password" id="login-password" required placeholder="••••••••" value="password123" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md shadow-emerald-600/20 mt-2">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Masuk ke Dashboard
+                </button>
+
+                <!-- TOMBOL NAVIGASI KE DAFTAR AKUN -->
+                <p class="text-center text-xs text-slate-500 mt-4">
+                    Belum punya akun Wali Kelas? 
+                    <button type="button" onclick="switchAuthMode('register')" class="text-emerald-600 font-bold hover:underline">Daftar Akun Baru</button>
+                </p>
+            </form>
+
+            <!-- FORM REGISTRASI WALI KELAS BARU -->
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div class="border-b border-slate-100 pb-2 mb-4 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-800">Pendaftaran Wali Kelas Baru</h3>
+                    <span class="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 font-semibold">Registrasi</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap & Gelar</label>
+                    <input type="text" id="reg-nama" required placeholder="Contoh: Ahmad Rosyid, S.Pd" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">NIP (Nomor Induk Pegawai)</label>
+                    <input type="text" id="reg-nip" required placeholder="Masukkan 18 Digit NIP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Wali Kelas Binaan</label>
+                    <select id="reg-kelas" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                        <option value="1">Kelas 7A (Pilot Project Uji Coba)</option>
+                        <option value="2">Kelas 7B</option>
+                        <option value="3">Kelas 8A</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Buat Kata Sandi (Password)</label>
+                    <input type="password" id="reg-password" required placeholder="Minimal 6 Karakter" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-xs transition duration-200 shadow-md shadow-blue-600/20 mt-2">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Mendaftar Akun Guru
+                </button>
+
+                <!-- TOMBOL NAVIGASI KEMBALI KE LOGIN -->
+                <p class="text-center text-xs text-slate-500 mt-4">
+                    Sudah punya akun terdaftar? 
+                    <button type="button" onclick="switchAuthMode('login')" class="text-blue-600 font-bold hover:underline">Masuk Sekarang</button>
+                </p>
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- 2. DASHBOARD WALI KELAS (TEMA PUTIH NETRAL) -->
+    <!-- ========================================== -->
+    <div id="dashboard-app" class="hidden min-h-screen flex flex-col">
+        <!-- HEADER NETRAL TANPA TEKS HANYA KELAS 7A -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-[1500px] mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center font-extrabold text-white text-xl shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-fingerprint"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-sm tracking-wide text-slate-900">PRESENSI IoT - MTsN 2 TARAKAN</h1>
+                        <p class="text-[11px] text-emerald-600 font-medium">Panel Manajemen Administrasi Presensi Siswa</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-semibold text-emerald-800">ESP32 Online (Wi-Fi)</span>
+                    </div>
+
+                    <div class="text-right">
+                        <p id="live-time" class="text-xs font-mono font-bold text-slate-800">08:00:00 WITA</p>
+                        <p class="text-[10px] text-slate-500">Sabtu, 26 September 2026</p>
+                    </div>
+
+                    <!-- Profil User Otomatis Menyesuaikan Database -->
+                    <div class="flex items-center space-x-3 pl-4 border-l border-slate-200">
+                        <div class="text-right">
+                            <p id="user-display-name" class="text-xs font-bold text-slate-900">Nama Guru</p>
+                            <span id="user-display-kelas" class="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200 font-semibold">Wali Kelas</span>
+                        </div>
+                        <button onclick="handleLogout()" title="Keluar" class="w-9 h-9 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl flex items-center justify-center transition">
+                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN DESKTOP CONTENT -->
+        <main class="max-w-[1500px] w-full mx-auto px-6 py-6 space-y-6 flex-grow">
+            <!-- METRIC CARDS -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">Total Siswa Binaan</p>
+                        <p id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">0 <span class="text-xs font-normal text-slate-400">Siswa</span></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                        <i class="fa-solid fa-users text-base"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">Hadir via IoT Fingerprint</p>
+                        <p id="stat-hadir" class="text-2xl font-bold text-emerald-600 mt-1">0 <span class="text-xs font-normal text-slate-400">(0%)</span></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                        <i class="fa-solid fa-fingerprint text-base"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">Sakit / Izin (Input Guru)</p>
+                        <p id="stat-izin" class="text-2xl font-bold text-amber-600 mt-1">0 <span class="text-xs font-normal text-slate-400">(0%)</span></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+                        <i class="fa-solid fa-notes-medical text-base"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">Tanpa Keterangan (Alfa)</p>
+                        <p id="stat-alfa" class="text-2xl font-bold text-rose-600 mt-1">0 <span class="text-xs font-normal text-slate-400">(0%)</span></p>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100">
+                        <i class="fa-solid fa-user-xmark text-base"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFIK VISUALISASI -->
+            <div class="grid grid-cols-3 gap-6">
+                <div class="col-span-2 bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xs font-bold text-slate-800 tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i> TREN KEHADIRAN SISWA MINGGUAN
+                        </h2>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded font-medium">Pekan Ke-3 September 2026</span>
+                    </div>
+                    <div class="h-60">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xs font-bold text-slate-800 tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-blue-600"></i> DISTRIBUSI STATUS HARI INI
+                        </h2>
+                    </div>
+                    <div class="h-60 relative flex items-center justify-center">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL DAFTAR SISWA -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-emerald-600"></i> Rekapitulasi Presensi Real-Time & Kelola Kehadiran
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Daftar siswa di bawah ini otomatis terhubung ke Database MySQL Laragon.</p>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openAddStudentModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+                            <i class="fa-solid fa-user-plus text-xs"></i> + Tambah Siswa Baru
+                        </button>
+                        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+                            <i class="fa-solid fa-file-excel text-xs"></i> Ekspor Excel
+                        </button>
+                        <button onclick="exportToPDF()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+                            <i class="fa-solid fa-file-pdf text-xs"></i> Ekspor PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                                <th class="py-3 px-4">No</th>
+                                <th class="py-3 px-4">NISN</th>
+                                <th class="py-3 px-4">Nama Siswa</th>
+                                <th class="py-3 px-4">Waktu Scan IoT</th>
+                                <th class="py-3 px-4">Status Kehadiran</th>
+                                <th class="py-3 px-4">Sumber Data</th>
+                                <th class="py-3 px-4">Keterangan Wali Kelas</th>
+                                <th class="py-3 px-4 text-center">Aksi Edit Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="divide-y divide-slate-100 text-slate-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-white border-t border-slate-200 py-4 mt-6">
+            <div class="max-w-[1500px] mx-auto px-6 text-center text-xs text-slate-500 flex justify-between items-center">
+                <p>© 2026 Tim Proyek Inovasi Digitalisasi Sekolah - MTsN 2 Tarakan</p>
+                <p class="font-mono text-[11px]">Server Localhost Laragon: <span class="text-emerald-600 font-bold">Connected (MySQL db_absensi_mtsn2)</span></p>
+            </div>
+        </footer>
+    </div>
+
+
+    <!-- MODAL POPUP EDIT STATUS -->
+    <div id="editModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-500"></i> Edit Status Absensi Siswa
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">Nama Siswa Selected:</label>
+                    <input type="text" id="edit-student-name" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800">
+                </div>
+
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">Pilih Status Baru:</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" onclick="selectStatus('Hadir')" class="status-btn border border-emerald-300 bg-emerald-50 text-emerald-800 py-2 rounded-xl font-bold text-center">Hadir</button>
+                        <button type="button" onclick="selectStatus('Sakit')" class="status-btn border border-amber-300 bg-amber-50 text-amber-800 py-2 rounded-xl font-bold text-center">Sakit</button>
+                        <button type="button" onclick="selectStatus('Izin')" class="status-btn border border-blue-300 bg-blue-50 text-blue-800 py-2 rounded-xl font-bold text-center">Izin</button>
+                        <button type="button" onclick="selectStatus('Alfa')" class="status-btn border border-rose-300 bg-rose-50 text-rose-800 py-2 rounded-xl font-bold text-center">Alfa</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">Catatan / Keterangan Wali Kelas:</label>
+                    <textarea id="edit-keterangan" placeholder="Contoh: Surat izin sakit diserahkan via WA..." class="w-full border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none focus:border-blue-500 h-20"></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-2 text-xs">
+                <button onclick="closeEditModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-medium">Batal</button>
+                <button onclick="saveStatusChange()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL POPUP TAMBAH SISWA -->
+    <div id="addStudentModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-blue-600"></i> Tambah Siswa Baru
+                </h3>
+                <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form onsubmit="handleAddStudent(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">NISN (Nomor Induk Siswa Nasional)</label>
+                    <input type="text" id="add-nisn" required placeholder="Contoh: 0081234569" class="w-full border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">Nama Lengkap Siswa</label>
+                    <input type="text" id="add-nama" required placeholder="Contoh: M. Fajar Nurhidayat" class="w-full border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-500 font-medium mb-1">ID Sensor Fingerprint (Alat IoT)</label>
+                    <input type="number" id="add-finger-id" required placeholder="Contoh: 7 (Nomor Urut Finger)" class="w-full border border-slate-200 rounded-xl p-2.5 text-slate-800 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-medium">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm">Simpan Siswa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- File JS Eksternal -->
+    <script src="script.js"></script>
+</body>
+</html>
